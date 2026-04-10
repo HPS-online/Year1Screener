@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phonics Screener — Units 1–8</title>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, Timestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── REPLACE THESE WITH YOUR FIREBASE PROJECT CONFIG ──────────────────────
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  window._db = db;
+  window._collection = collection;
+  window._addDoc     = addDoc;
+  window._getDocs    = getDocs;
+  window._query      = query;
+  window._orderBy    = orderBy;
+  window._Timestamp  = Timestamp;
+  window._fbReady    = true;
+  document.dispatchEvent(new Event("fb-ready"));
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ── RESET & BASE ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --teal:    #0d9488;
+  --teal-lt: #ccfbf1;
+  --teal-dk: #0f766e;
+  --amber:   #f59e0b;
+  --amber-lt:#fef3c7;
+  --red:     #ef4444;
+  --red-lt:  #fee2e2;
+  --green:   #22c55e;
+  --green-lt:#dcfce7;
+  --slate:   #1e293b;
+  --slate-md:#475569;
+  --slate-lt:#94a3b8;
+  --bg:      #f0fdfa;
+  --card:    #ffffff;
+  --border:  #e2e8f0;
+  --radius:  12px;
+  --shadow:  0 2px 12px rgba(13,148,136,.10);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Nunito Sans', sans-serif;
+  background: var(--bg);
+  color: var(--slate);
+  min-height: 100vh;
+}
+
+h1, h2, h3, .brand { font-family: 'Nunito', sans-serif; }
+
+/* ── NAV ──────────────────────────────────────────────────────── */
+nav {
+  background: var(--teal);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.brand { color: #fff; font-size: 1.1rem; font-weight: 800; letter-spacing: -.3px; }
+.brand span { opacity: .7; font-weight: 600; }
+.nav-tabs { display: flex; gap: 4px; }
+.nav-tab {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,.75);
+  font-family: 'Nunito', sans-serif;
+  font-size: .85rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.nav-tab:hover { background: rgba(255,255,255,.15); color: #fff; }
+.nav-tab.active { background: rgba(255,255,255,.25); color: #fff; }
+
+/* ── PAGES ────────────────────────────────────────────────────── */
+.page { display: none; padding: 24px; max-width: 900px; margin: 0 auto; }
+.page.active { display: block; }
+
+/* ── CARDS ────────────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--teal-dk);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.unit-badge {
+  background: var(--teal);
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+/* ── FORM INPUTS ──────────────────────────────────────────────── */
+.form-group { margin-bottom: 16px; }
+label { display: block; font-size: .8rem; font-weight: 700; color: var(--slate-md); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+input[type=text], input[type=date], select, textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: .95rem;
+  color: var(--slate);
+  background: #fff;
+  transition: border-color .2s;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(13,148,136,.12);
+}
+textarea { resize: vertical; min-height: 60px; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width:500px){ .form-row { grid-template-columns: 1fr; } }
+
+/* ── BUTTONS ──────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 20px;
+  border: none; border-radius: 8px; cursor: pointer;
+  font-family: 'Nunito', sans-serif; font-size: .9rem; font-weight: 800;
+  transition: all .18s;
+}
+.btn-primary { background: var(--teal); color: #fff; }
+.btn-primary:hover { background: var(--teal-dk); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(13,148,136,.3); }
+.btn-secondary { background: var(--border); color: var(--slate); }
+.btn-secondary:hover { background: #cbd5e1; }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-sm { padding: 6px 12px; font-size: .78rem; }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+
+/* ── WORD GRID ────────────────────────────────────────────────── */
+.word-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+@media(max-width:480px){ .word-grid { grid-template-columns: 1fr 1fr; } }
+
+.word-btn {
+  position: relative;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px 10px 10px;
+  cursor: pointer;
+  transition: all .18s;
+  text-align: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--slate);
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.word-btn:hover { border-color: var(--teal-lt); background: var(--teal-lt); }
+.word-btn.correct { border-color: var(--green); background: var(--green-lt); color: #166534; }
+.word-btn.incorrect { border-color: var(--red); background: var(--red-lt); color: #991b1b; }
+.word-btn .status-icon { font-size: .85rem; }
+.word-btn .comment-indicator {
+  font-size: .6rem;
+  background: var(--amber);
+  color: #fff;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-weight: 800;
+}
+
+/* ── PGC GRID ─────────────────────────────────────────────────── */
+.pgc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 8px;
+}
+.pgc-btn {
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px 6px;
+  cursor: pointer;
+  transition: all .18s;
+  text-align: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--slate);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.pgc-btn:hover { border-color: var(--teal); background: var(--teal-lt); }
+.pgc-btn.correct { border-color: var(--green); background: var(--green-lt); color: #166534; }
+.pgc-btn.incorrect { border-color: var(--red); background: var(--red-lt); color: #991b1b; }
+.pgc-btn .pgc-example { font-size: .6rem; color: var(--slate-lt); font-weight: 600; }
+.pgc-btn.correct .pgc-example { color: #16a34a; }
+.pgc-btn.incorrect .pgc-example { color: #dc2626; }
+
+/* ── COMMENT MODAL ────────────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  animation: popIn .2s ease;
+}
+@keyframes popIn {
+  from { transform: scale(.9); opacity: 0; }
+  to   { transform: scale(1);  opacity: 1; }
+}
+.modal h3 { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+.modal .modal-word { font-size: 1.4rem; font-weight: 900; color: var(--red); margin-bottom: 14px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 14px; justify-content: flex-end; }
+
+/* ── SCORE SUMMARY ────────────────────────────────────────────── */
+.score-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--teal-lt);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.score-circle {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+.score-circle .score-num { font-size: 1.25rem; line-height: 1; }
+.score-circle .score-denom { font-size: .65rem; opacity: .8; }
+.score-info h4 { font-weight: 800; font-size: .95rem; }
+.score-info p { font-size: .8rem; color: var(--slate-md); }
+
+/* ── DASHBOARD TABLE ──────────────────────────────────────────── */
+.filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+.filters .form-group { margin: 0; flex: 1; min-width: 140px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .85rem;
+}
+thead th {
+  background: var(--teal);
+  color: #fff;
+  padding: 10px 12px;
+  text-align: left;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: .78rem;
+  letter-spacing: .3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+thead th:hover { background: var(--teal-dk); }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+tbody tr:hover { background: var(--teal-lt); cursor: pointer; }
+tbody td { padding: 9px 12px; }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 800;
+  font-family: 'Nunito', sans-serif;
+}
+.badge-green { background: var(--green-lt); color: #166534; }
+.badge-amber { background: var(--amber-lt); color: #92400e; }
+.badge-red   { background: var(--red-lt);   color: #991b1b; }
+
+/* ── DETAIL MODAL ─────────────────────────────────────────────── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px,1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+.detail-item {
+  border-radius: 8px;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: .8rem;
+  font-weight: 700;
+}
+.detail-item.correct  { background: var(--green-lt); color: #166534; }
+.detail-item.incorrect{ background: var(--red-lt);   color: #991b1b; }
+.detail-item.unscored { background: #f1f5f9; color: var(--slate-lt); }
+.detail-comment { font-size: .65rem; font-style: italic; color: #b45309; margin-top: 2px; }
+
+/* ── EMPTY STATE ──────────────────────────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--slate-lt);
+}
+.empty .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+.empty p { font-size: .9rem; }
+
+/* ── TOAST ────────────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--slate);
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: .88rem;
+  z-index: 999;
+  transition: transform .3s ease;
+  pointer-events: none;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── SECTION DIVIDER ──────────────────────────────────────────── */
+.section-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 20px 0 12px;
+  font-size: .75rem;
+  font-weight: 800;
+  color: var(--slate-md);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+}
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.progress-strip {
+  display: flex; gap: 3px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.progress-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--border);
+  transition: background .2s;
+}
+.progress-dot.correct  { background: var(--green); }
+.progress-dot.incorrect{ background: var(--red); }
+
+.sticky-scores {
+  position: sticky; top: 60px; z-index: 50;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 24px;
+  display: flex; gap: 20px; align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+  max-width: 900px; margin: 0 auto;
+}
+.sticky-score-item { font-size: .82rem; font-weight: 700; }
+.sticky-score-item span { color: var(--teal); font-size: 1rem; font-weight: 900; }
+
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="brand">📖 Phonics Screener <span>Units 1–8</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('entry')">Screen Student</button>
+    <button class="nav-tab" onclick="showPage('dashboard')">Dashboard</button>
+  </div>
+</nav>
+
+<!-- STICKY LIVE SCORES (entry page) -->
+<div id="sticky-scores" class="sticky-scores" style="display:none;">
+  <div class="sticky-score-item">Words: <span id="ss-words">0</span>/24</div>
+  <div class="sticky-score-item">PGCs: <span id="ss-pgcs">0</span>/48</div>
+  <div style="flex:1"></div>
+  <div id="ss-name" style="font-size:.8rem;color:var(--slate-md);font-weight:700;"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!--  PAGE: ENTRY                                           -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div id="page-entry" class="page active">
+
+  <!-- Step 1: Setup -->
+  <div id="step-setup">
+    <div class="card">
+      <div class="card-title">🎯 Start Screening Session</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Teacher Name</label>
+          <input type="text" id="teacher-name" placeholder="e.g. Ms Williams" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Student Name</label>
+          <input type="text" id="student-name" placeholder="e.g. Liam Chen" autocomplete="off">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Class / Group</label>
+          <input type="text" id="student-class" placeholder="e.g. 1A" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="screen-date">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="startScreening()">Start Screening →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Screening -->
+  <div id="step-screening" style="display:none;">
+
+    <!-- WORDS SECTION -->
+    <div class="card">
+      <div class="card-title">📝 Words to Read
+        <span style="font-size:.78rem;color:var(--slate-md);font-weight:600;margin-left:auto;">Tap: correct → incorrect → clear</span>
+      </div>
+
+      <div class="section-divider">Units 1–4 · Initial Code CVC Words</div>
+      <div class="word-grid" id="grid-cvc"></div>
+
+      <div class="section-divider">Unit 5 · Longer Words</div>
+      <div class="word-grid" id="grid-longer"></div>
+
+      <div class="section-divider">Unit 6 · Consonant Digraphs</div>
+      <div class="word-grid" id="grid-digraph"></div>
+
+      <div class="section-divider">Units 7 & 8 · Extended Code Vowel Digraphs</div>
+      <div class="word-grid" id="grid-vowel"></div>
+    </div>
+
+    <!-- PGC SECTION -->
+    <div class="card">
+      <div class="card-title">🔤 PGCs (Phoneme–Grapheme Correspondences)
+        <span style="font-size:.78rem;color:var(--slate-md);font-weight:600;margin-left:auto;">Optional section</span>
+      </div>
+      <p style="font-size:.8rem;color:var(--slate-md);margin-bottom:14px;">Complete only if student struggles at word level. Tap to mark correct/incorrect.</p>
+
+      <div id="pgc-units"></div>
+    </div>
+
+    <!-- SAVE -->
+    <div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <div style="flex:1;">
+        <div style="font-size:.8rem;color:var(--slate-md);font-weight:700;">Session summary</div>
+        <div id="save-summary" style="font-size:.9rem;font-weight:800;color:var(--slate);margin-top:2px;"></div>
+      </div>
+      <button class="btn btn-secondary" onclick="resetForm()">✕ Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveRecord()">💾 Save Record</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!--  PAGE: DASHBOARD                                       -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div id="page-dashboard" class="page">
+  <div class="card">
+    <div class="card-title">📊 Screened Students</div>
+
+    <div class="filters">
+      <div class="form-group">
+        <label>Search student</label>
+        <input type="text" id="filter-name" placeholder="Name…" oninput="renderTable()">
+      </div>
+      <div class="form-group">
+        <label>Class</label>
+        <input type="text" id="filter-class" placeholder="e.g. 1A" oninput="renderTable()">
+      </div>
+      <div class="form-group">
+        <label>Min word score</label>
+        <input type="text" id="filter-min-words" placeholder="e.g. 0" oninput="renderTable()" style="max-width:80px;">
+      </div>
+      <div class="form-group">
+        <label>Max word score</label>
+        <input type="text" id="filter-max-words" placeholder="e.g. 24" oninput="renderTable()" style="max-width:80px;">
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-end;">
+        <button class="btn btn-secondary btn-sm" onclick="clearFilters()">Clear</button>
+        <button class="btn btn-primary btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+    </div>
+
+    <div id="dash-content">
+      <div class="empty"><div class="empty-icon">📋</div><p>Loading records…</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- COMMENT MODAL -->
+<div id="comment-modal" class="modal-overlay">
+  <div class="modal">
+    <h3>Incorrect — add a note?</h3>
+    <div class="modal-word" id="modal-item-label"></div>
+    <div class="form-group">
+      <label>What did the student say? <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+      <textarea id="modal-comment" placeholder="e.g. said 'hop' instead of 'chop'" rows="2"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeCommentModal(false)">Skip</button>
+      <button class="btn btn-primary" onclick="closeCommentModal(true)">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="detail-modal" class="modal-overlay">
+  <div class="modal" style="max-width:600px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 id="detail-title"></h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeDetailModal()">✕ Close</button>
+    </div>
+    <div id="detail-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA DEFINITIONS
+// ══════════════════════════════════════════════
+const WORDS = {
+  cvc:     ["hen","lip","jam","kit","cod","bug"],
+  longer:  ["swim","bend","quit","frill","cramp","scrub"],
+  digraph: ["shut","moth","chop","ring","whizz","them"],
+  vowel:   ["join","hay","took","feed","shy","might"]
+};
+
+const WORD_SECTIONS = [
+  { key:"cvc",     label:"Units 1–4: CVC Words" },
+  { key:"longer",  label:"Unit 5: Longer Words" },
+  { key:"digraph", label:"Unit 6: Consonant Digraphs" },
+  { key:"vowel",   label:"Units 7 & 8: Vowel Digraphs" }
+];
+
+const PGCS = [
+  { unit:1, items:[
+    {pgc:"s", ex:"sun"},{pgc:"a", ex:"apple"},{pgc:"t", ex:"tap"},
+    {pgc:"n", ex:"nose"},{pgc:"p", ex:"pig"},{pgc:"i", ex:"insect"}
+  ]},
+  { unit:2, items:[
+    {pgc:"m", ex:"mouse"},{pgc:"d", ex:"dog"},{pgc:"g", ex:"gate"},
+    {pgc:"o", ex:"orange"},{pgc:"c", ex:"cat"},{pgc:"r", ex:"rabbit"},{pgc:"f", ex:"fish"}
+  ]},
+  { unit:3, items:[
+    {pgc:"e", ex:"egg"},{pgc:"h", ex:"hat"},{pgc:"b", ex:"bed"},
+    {pgc:"l", ex:"ladder"},{pgc:"u", ex:"umbrella"},{pgc:"k", ex:"kite"},{pgc:"ck", ex:"duck"}
+  ]},
+  { unit:4, items:[
+    {pgc:"j", ex:"jam"},{pgc:"w", ex:"web"},{pgc:"v", ex:"van"},
+    {pgc:"x", ex:"box"},{pgc:"y", ex:"yoyo"},{pgc:"z", ex:"zip"}
+  ]},
+  { unit:5, items:[
+    {pgc:"qu", ex:"quilt"},{pgc:"ff", ex:"cliff"},{pgc:"ll", ex:"bell"},
+    {pgc:"ss", ex:"dress"},{pgc:"zz", ex:"buzz"}
+  ]},
+  { unit:6, items:[
+    {pgc:"sh", ex:"shell"},{pgc:"th", ex:"weather"},{pgc:"th", ex:"thumb"},
+    {pgc:"ch", ex:"cheese"},{pgc:"ng", ex:"ring"},{pgc:"wh", ex:"whale"}
+  ]},
+  { unit:7, items:[
+    {pgc:"ai", ex:"rain"},{pgc:"ay", ex:"play"},{pgc:"ee", ex:"feet"},
+    {pgc:"ea", ex:"eat"},{pgc:"_y", ex:"happy"}
+  ]},
+  { unit:8, items:[
+    {pgc:"oi", ex:"coin"},{pgc:"oy", ex:"boy"},{pgc:"_y", ex:"sky"},
+    {pgc:"igh", ex:"light"},{pgc:"oo", ex:"moon"},{pgc:"oo", ex:"book"}
+  ]}
+];
+
+// Build flat item key lists
+const ALL_WORD_KEYS = Object.values(WORDS).flat();
+const ALL_PGC_KEYS  = PGCS.flatMap(u => u.items.map((_,i) => `pgc_u${u.unit}_${i}`));
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let state = {};   // item key → { status: 'correct'|'incorrect'|null, comment: '' }
+let allRecords = [];
+let sortCol = 'date', sortDir = -1;
+
+// comment modal pending
+let _pendingKey = null;
+let _pendingEl  = null;
+
+// ══════════════════════════════════════════════
+//  PAGE NAVIGATION
+// ══════════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-tab')[name==='entry'?0:1].classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+}
+
+// ══════════════════════════════════════════════
+//  BUILD GRIDS
+// ══════════════════════════════════════════════
+function buildWordGrid(gridId, words) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+  words.forEach(word => {
+    const key = word;
+    const btn = document.createElement('button');
+    btn.className = 'word-btn';
+    btn.id = 'wb-'+key;
+    btn.innerHTML = `<span class="word-text">${word}</span><span class="status-icon"></span>`;
+    btn.onclick = () => cycleWord(key, btn);
+    grid.appendChild(btn);
+  });
+}
+
+function buildPGCUnits() {
+  const container = document.getElementById('pgc-units');
+  container.innerHTML = '';
+  PGCS.forEach(unit => {
+    const div = document.createElement('div');
+    div.innerHTML = `<div class="section-divider">Unit ${unit.unit}</div>`;
+    const grid = document.createElement('div');
+    grid.className = 'pgc-grid';
+    unit.items.forEach((item, i) => {
+      const key = `pgc_u${unit.unit}_${i}`;
+      const btn = document.createElement('button');
+      btn.className = 'pgc-btn';
+      btn.id = 'pb-'+key;
+      btn.innerHTML = `<span class="pgc-sound">${item.pgc}</span><span class="pgc-example">${item.ex}</span>`;
+      btn.onclick = () => cyclePGC(key, btn, item.pgc, item.ex);
+      grid.appendChild(btn);
+    });
+    div.appendChild(grid);
+    container.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  CYCLE LOGIC
+// ══════════════════════════════════════════════
+function cycleWord(key, btn) {
+  const cur = state[key]?.status || null;
+  if (cur === null) {
+    // → correct
+    state[key] = { status:'correct', comment:'' };
+    btn.className = 'word-btn correct';
+    btn.querySelector('.status-icon').textContent = '✓';
+  } else if (cur === 'correct') {
+    // → incorrect, open comment modal
+    state[key] = { status:'incorrect', comment:'' };
+    btn.className = 'word-btn incorrect';
+    btn.querySelector('.status-icon').textContent = '✗';
+    openCommentModal(key, btn, key);
+  } else {
+    // → clear
+    state[key] = { status:null, comment:'' };
+    btn.className = 'word-btn';
+    btn.querySelector('.status-icon').textContent = '';
+    btn.querySelector('.comment-indicator')?.remove();
+  }
+  updateSummary();
+}
+
+function cyclePGC(key, btn, pgc, ex) {
+  const cur = state[key]?.status || null;
+  if (cur === null) {
+    state[key] = { status:'correct', comment:'' };
+    btn.className = 'pgc-btn correct';
+  } else if (cur === 'correct') {
+    state[key] = { status:'incorrect', comment:'' };
+    btn.className = 'pgc-btn incorrect';
+    openCommentModal(key, btn, `${pgc} (${ex})`);
+  } else {
+    state[key] = { status:null, comment:'' };
+    btn.className = 'pgc-btn';
+  }
+  updateSummary();
+}
+
+// ══════════════════════════════════════════════
+//  COMMENT MODAL
+// ══════════════════════════════════════════════
+function openCommentModal(key, el, label) {
+  _pendingKey = key;
+  _pendingEl  = el;
+  document.getElementById('modal-item-label').textContent = label;
+  document.getElementById('modal-comment').value = state[key]?.comment || '';
+  document.getElementById('comment-modal').classList.add('open');
+  setTimeout(() => document.getElementById('modal-comment').focus(), 100);
+}
+
+function closeCommentModal(save) {
+  if (save && _pendingKey) {
+    state[_pendingKey].comment = document.getElementById('modal-comment').value.trim();
+    // show indicator on word btn if comment entered
+    if (_pendingEl && state[_pendingKey].comment && _pendingEl.classList.contains('word-btn')) {
+      let ind = _pendingEl.querySelector('.comment-indicator');
+      if (!ind) {
+        ind = document.createElement('span');
+        ind.className = 'comment-indicator';
+        _pendingEl.appendChild(ind);
+      }
+      ind.textContent = '💬';
+    }
+  }
+  document.getElementById('comment-modal').classList.remove('open');
+  _pendingKey = null; _pendingEl = null;
+}
+
+// close on overlay click
+document.getElementById('comment-modal').addEventListener('click', function(e){
+  if (e.target === this) closeCommentModal(false);
+});
+
+// ══════════════════════════════════════════════
+//  SCORING
+// ══════════════════════════════════════════════
+function calcScores() {
+  let words = 0, pgcs = 0;
+  ALL_WORD_KEYS.forEach(k => { if (state[k]?.status==='correct') words++; });
+  ALL_PGC_KEYS.forEach(k  => { if (state[k]?.status==='correct') pgcs++;  });
+  return { words, pgcs };
+}
+
+function updateSummary() {
+  const { words, pgcs } = calcScores();
+  document.getElementById('ss-words').textContent = words;
+  document.getElementById('ss-pgcs').textContent  = pgcs;
+  const sName = document.getElementById('student-name').value.trim();
+  document.getElementById('ss-name').textContent  = sName ? `Student: ${sName}` : '';
+  document.getElementById('save-summary').textContent =
+    `Words: ${words}/24 · PGCs: ${pgcs}/48`;
+}
+
+// ══════════════════════════════════════════════
+//  FORM CONTROL
+// ══════════════════════════════════════════════
+function startScreening() {
+  const teacher = document.getElementById('teacher-name').value.trim();
+  const student = document.getElementById('student-name').value.trim();
+  if (!teacher) { toast('Please enter teacher name'); return; }
+  if (!student) { toast('Please enter student name'); return; }
+
+  // reset state
+  state = {};
+
+  // build grids
+  buildWordGrid('grid-cvc',     WORDS.cvc);
+  buildWordGrid('grid-longer',  WORDS.longer);
+  buildWordGrid('grid-digraph', WORDS.digraph);
+  buildWordGrid('grid-vowel',   WORDS.vowel);
+  buildPGCUnits();
+
+  // set date default
+  if (!document.getElementById('screen-date').value) {
+    document.getElementById('screen-date').value = new Date().toISOString().split('T')[0];
+  }
+
+  document.getElementById('step-setup').style.display = 'none';
+  document.getElementById('step-screening').style.display = '';
+  document.getElementById('sticky-scores').style.display = 'flex';
+  document.getElementById('ss-name').textContent = `Student: ${student}`;
+  updateSummary();
+  window.scrollTo(0,0);
+}
+
+function resetForm() {
+  if (!confirm('Discard this screening session?')) return;
+  document.getElementById('step-setup').style.display = '';
+  document.getElementById('step-screening').style.display = 'none';
+  document.getElementById('sticky-scores').style.display = 'none';
+  state = {};
+}
+
+// ══════════════════════════════════════════════
+//  SAVE TO FIREBASE
+// ══════════════════════════════════════════════
+async function saveRecord() {
+  if (!window._fbReady) { toast('Firebase not connected — check config'); return; }
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const { words, pgcs } = calcScores();
+
+  // build item details
+  const wordDetails = {};
+  ALL_WORD_KEYS.forEach(k => {
+    wordDetails[k] = { status: state[k]?.status || null, comment: state[k]?.comment || '' };
+  });
+  const pgcDetails = {};
+  ALL_PGC_KEYS.forEach(k => {
+    pgcDetails[k] = { status: state[k]?.status || null, comment: state[k]?.comment || '' };
+  });
+
+  // per-unit word breakdowns
+  const unitWordScores = {};
+  WORD_SECTIONS.forEach(sec => {
+    let correct = 0, total = 0;
+    WORDS[sec.key].forEach(w => {
+      if (state[w]?.status !== null) total++;
+      if (state[w]?.status === 'correct') correct++;
+    });
+    unitWordScores[sec.key] = { correct, scored: total };
+  });
+
+  const record = {
+    teacher:   document.getElementById('teacher-name').value.trim(),
+    student:   document.getElementById('student-name').value.trim(),
+    class:     document.getElementById('student-class').value.trim(),
+    date:      document.getElementById('screen-date').value,
+    wordScore: words,
+    pgcScore:  pgcs,
+    wordDetails,
+    pgcDetails,
+    unitWordScores,
+    createdAt: window._Timestamp.now()
+  };
+
+  try {
+    await window._addDoc(window._collection(window._db, 'screenings'), record);
+    toast('✅ Record saved!');
+    resetForm();
+    document.getElementById('student-name').value = '';
+    document.getElementById('student-class').value = '';
+  } catch(e) {
+    console.error(e);
+    toast('❌ Save failed — check Firebase config');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Save Record';
+  }
+}
+
+// ══════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════
+async function loadDashboard() {
+  if (!window._fbReady) {
+    document.getElementById('dash-content').innerHTML =
+      `<div class="empty"><div class="empty-icon">⚠️</div><p>Firebase not configured yet.<br>Replace the config values in the &lt;script&gt; block at the top of this file.</p></div>`;
+    return;
+  }
+  try {
+    const snap = await window._getDocs(
+      window._query(window._collection(window._db,'screenings'), window._orderBy('createdAt','desc'))
+    );
+    allRecords = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTable();
+  } catch(e) {
+    document.getElementById('dash-content').innerHTML =
+      `<div class="empty"><div class="empty-icon">❌</div><p>Error loading data: ${e.message}</p></div>`;
+  }
+}
+
+function renderTable() {
+  const nameF  = document.getElementById('filter-name').value.toLowerCase();
+  const classF = document.getElementById('filter-class').value.toLowerCase();
+  const minW   = parseInt(document.getElementById('filter-min-words').value) || 0;
+  const maxW   = parseInt(document.getElementById('filter-max-words').value) || 24;
+
+  let rows = allRecords.filter(r => {
+    if (nameF  && !r.student?.toLowerCase().includes(nameF))   return false;
+    if (classF && !r.class?.toLowerCase().includes(classF))    return false;
+    if (r.wordScore < minW || r.wordScore > maxW)               return false;
+    return true;
+  });
+
+  // sort
+  rows.sort((a,b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (typeof av === 'string') av = av.toLowerCase(), bv = bv.toLowerCase();
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+
+  if (!rows.length) {
+    document.getElementById('dash-content').innerHTML =
+      `<div class="empty"><div class="empty-icon">🔍</div><p>No records match your filters.</p></div>`;
+    return;
+  }
+
+  const th = (col, label) =>
+    `<th onclick="setSort('${col}')">${label} ${sortCol===col?(sortDir>0?'↑':'↓'):''}</th>`;
+
+  let html = `<div style="overflow-x:auto;"><table>
+    <thead><tr>
+      ${th('student','Student')}
+      ${th('class','Class')}
+      ${th('date','Date')}
+      ${th('teacher','Teacher')}
+      ${th('wordScore','Words /24')}
+      ${th('pgcScore','PGCs /48')}
+      <th>Detail</th>
+    </tr></thead><tbody>`;
+
+  rows.forEach(r => {
+    const wBadge = scoreBadge(r.wordScore, 24);
+    const pBadge = scoreBadge(r.pgcScore,  48);
+    html += `<tr onclick="openDetail('${r.id}')">
+      <td><strong>${r.student||'—'}</strong></td>
+      <td>${r.class||'—'}</td>
+      <td>${r.date||'—'}</td>
+      <td>${r.teacher||'—'}</td>
+      <td>${wBadge}</td>
+      <td>${pBadge}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openDetail('${r.id}')">View →</button></td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div>
+    <div style="margin-top:10px;font-size:.78rem;color:var(--slate-lt);">${rows.length} student${rows.length!==1?'s':''} shown</div>`;
+  document.getElementById('dash-content').innerHTML = html;
+}
+
+function scoreBadge(score, max) {
+  if (score == null || score === undefined) return '<span class="badge" style="background:#f1f5f9;color:#94a3b8;">—</span>';
+  const pct = score / max;
+  const cls = pct >= .8 ? 'badge-green' : pct >= .5 ? 'badge-amber' : 'badge-red';
+  return `<span class="badge ${cls}">${score}/${max}</span>`;
+}
+
+function setSort(col) {
+  if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = -1; }
+  renderTable();
+}
+
+function clearFilters() {
+  ['filter-name','filter-class','filter-min-words','filter-max-words']
+    .forEach(id => document.getElementById(id).value = '');
+  renderTable();
+}
+
+// ══════════════════════════════════════════════
+//  DETAIL MODAL
+// ══════════════════════════════════════════════
+function openDetail(id) {
+  const r = allRecords.find(x => x.id === id);
+  if (!r) return;
+
+  document.getElementById('detail-title').textContent =
+    `${r.student} — ${r.date} (${r.teacher})`;
+
+  let html = `
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+      <div class="score-bar" style="flex:1;min-width:160px;">
+        <div class="score-circle"><span class="score-num">${r.wordScore??'—'}</span><span class="score-denom">/24</span></div>
+        <div class="score-info"><h4>Words</h4><p>Class: ${r.class||'—'}</p></div>
+      </div>
+      <div class="score-bar" style="flex:1;min-width:160px;">
+        <div class="score-circle"><span class="score-num">${r.pgcScore??'—'}</span><span class="score-denom">/48</span></div>
+        <div class="score-info"><h4>PGCs</h4></div>
+      </div>
+    </div>`;
+
+  // Words breakdown
+  WORD_SECTIONS.forEach(sec => {
+    html += `<div style="font-size:.75rem;font-weight:800;color:var(--slate-md);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;">${sec.label}</div>`;
+    html += `<div class="detail-grid">`;
+    WORDS[sec.key].forEach(w => {
+      const d = r.wordDetails?.[w];
+      const cls = !d?.status ? 'unscored' : d.status;
+      html += `<div class="detail-item ${cls}">
+        <div>${w}</div>
+        ${d?.status==='correct'?'<div style="font-size:.7rem;">✓</div>':''}
+        ${d?.status==='incorrect'?'<div style="font-size:.7rem;">✗</div>':''}
+        ${d?.comment?`<div class="detail-comment">"${d.comment}"</div>`:''}
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  // PGC breakdown
+  const hasPGC = ALL_PGC_KEYS.some(k => r.pgcDetails?.[k]?.status);
+  if (hasPGC) {
+    html += `<div style="font-size:.75rem;font-weight:800;color:var(--slate-md);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px;">PGCs</div>`;
+    PGCS.forEach(unit => {
+      html += `<div style="font-size:.72rem;color:var(--slate-lt);font-weight:700;margin:8px 0 4px;">Unit ${unit.unit}</div>`;
+      html += `<div class="detail-grid">`;
+      unit.items.forEach((item, i) => {
+        const k = `pgc_u${unit.unit}_${i}`;
+        const d = r.pgcDetails?.[k];
+        const cls = !d?.status ? 'unscored' : d.status;
+        html += `<div class="detail-item ${cls}">
+          <div style="font-size:.9rem;">${item.pgc}</div>
+          <div style="font-size:.6rem;opacity:.7;">${item.ex}</div>
+          ${d?.comment?`<div class="detail-comment">"${d.comment}"</div>`:''}
+        </div>`;
+      });
+      html += `</div>`;
+    });
+  }
+
+  document.getElementById('detail-body').innerHTML = html;
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function closeDetailModal() {
+  document.getElementById('detail-modal').classList.remove('open');
+}
+document.getElementById('detail-modal').addEventListener('click', function(e){
+  if (e.target === this) closeDetailModal();
+});
+
+// ══════════════════════════════════════════════
+//  CSV EXPORT
+// ══════════════════════════════════════════════
+function exportCSV() {
+  if (!allRecords.length) { toast('No records to export'); return; }
+
+  // headers
+  const wordHeaders = ALL_WORD_KEYS.flatMap(w => [w+'_result', w+'_comment']);
+  const pgcHeaders  = PGCS.flatMap(u =>
+    u.items.map((item,i) => `pgc_u${u.unit}_${i}_${item.pgc}(${item.ex})_result`)
+  );
+
+  const headers = ['student','class','date','teacher','word_score','pgc_score',
+    ...wordHeaders, ...pgcHeaders];
+
+  const rows = allRecords.map(r => {
+    const base = [r.student||'', r.class||'', r.date||'', r.teacher||'',
+                  r.wordScore??'', r.pgcScore??''];
+    const wordCols = ALL_WORD_KEYS.flatMap(w => [
+      r.wordDetails?.[w]?.status||'',
+      (r.wordDetails?.[w]?.comment||'').replace(/,/g,' ')
+    ]);
+    const pgcCols = PGCS.flatMap(u =>
+      u.items.map((_,i) => r.pgcDetails?.[`pgc_u${u.unit}_${i}`]?.status||'')
+    );
+    return [...base, ...wordCols, ...pgcCols];
+  });
+
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `phonics_screener_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  toast('CSV downloaded');
+}
+
+// ══════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+document.getElementById('screen-date').value = new Date().toISOString().split('T')[0];
+
+// Wait for Firebase then pre-load dashboard data quietly
+document.addEventListener('fb-ready', () => {
+  // no action needed on load — dashboard loads when tab is opened
+});
+</script>
+</body>
+</html>
