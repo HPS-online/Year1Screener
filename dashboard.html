@@ -8,18 +8,18 @@
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, query, orderBy }
+  import { getFirestore, collection, getDocs, query, orderBy, doc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   // ── REPLACE THESE WITH YOUR FIREBASE PROJECT CONFIG ──────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyA9fVYdQnIkTWLcFYiZlzE2dTx8cKxa2LA",
-  authDomain: "year1screener.firebaseapp.com",
-  projectId: "year1screener",
-  storageBucket: "year1screener.firebasestorage.app",
-  messagingSenderId: "50295365765",
-  appId: "1:50295365765:web:c82bbac57b65fcb18249ec"
-};
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
   // ─────────────────────────────────────────────────────────────────────────
 
   const app  = initializeApp(firebaseConfig);
@@ -29,6 +29,8 @@ const firebaseConfig = {
   window._getDocs    = getDocs;
   window._query      = query;
   window._orderBy    = orderBy;
+  window._doc        = doc;
+  window._deleteDoc  = deleteDoc;
   window._fbReady    = true;
   document.dispatchEvent(new Event("fb-ready"));
 </script>
@@ -492,7 +494,10 @@ function renderTable() {
       <td>${wBadge}</td>
       <td>${pBadge}</td>
       <td><div class="mini-bars">${bars}</div></td>
-      <td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openDetail('${r.id}')">View →</button></td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();openDetail('${r.id}')">View →</button>
+        <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;margin-left:4px;" onclick="event.stopPropagation();deleteRecord('${r.id}','${(r.student||'this student').replace(/'/g,"\\'")}')">🗑</button>
+      </td>
     </tr>`;
   });
 
@@ -505,6 +510,21 @@ function scoreBadge(score, max) {
   const pct = score/max;
   const cls = pct>=.8?'badge-green':pct>=.5?'badge-amber':'badge-red';
   return `<span class="badge ${cls}">${score}/${max}</span>`;
+}
+
+// ── DELETE ───────────────────────────────────────────────────────
+async function deleteRecord(id, studentName) {
+  if (!confirm(`Delete screening record for "${studentName}"?\n\nThis cannot be undone.`)) return;
+  try {
+    await window._deleteDoc(window._doc(window._db, 'screenings', id));
+    allRecords = allRecords.filter(r => r.id !== id);
+    updateStats();
+    renderTable();
+    toast(`🗑 Record for ${studentName} deleted`);
+  } catch(e) {
+    console.error(e);
+    toast('❌ Delete failed — try again');
+  }
 }
 
 function setSort(col) {

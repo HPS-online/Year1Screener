@@ -12,14 +12,14 @@
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   // ── REPLACE THESE WITH YOUR FIREBASE PROJECT CONFIG ──────────────────────
-const firebaseConfig = {
-  apiKey: "AIzaSyA9fVYdQnIkTWLcFYiZlzE2dTx8cKxa2LA",
-  authDomain: "year1screener.firebaseapp.com",
-  projectId: "year1screener",
-  storageBucket: "year1screener.firebasestorage.app",
-  messagingSenderId: "50295365765",
-  appId: "1:50295365765:web:c82bbac57b65fcb18249ec"
-};
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
   // ─────────────────────────────────────────────────────────────────────────
 
   const app  = initializeApp(firebaseConfig);
@@ -375,6 +375,46 @@ tbody td { padding: 9px 12px; }
 .empty .empty-icon { font-size: 3rem; margin-bottom: 12px; }
 .empty p { font-size: .9rem; }
 
+/* ── SAVING OVERLAY ───────────────────────────────────────────── */
+.saving-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(15,118,110,.85);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+.saving-overlay.open { display: flex; }
+.saving-spinner {
+  width: 64px; height: 64px;
+  border: 6px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.saving-text {
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+.saving-bar-wrap {
+  width: 220px; height: 6px;
+  background: rgba(255,255,255,.3);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.saving-bar {
+  height: 100%;
+  width: 0%;
+  background: #fff;
+  border-radius: 10px;
+  transition: width .12s ease;
+}
+
 /* ── TOAST ────────────────────────────────────────────────────── */
 #toast {
   position: fixed;
@@ -592,6 +632,15 @@ tbody td { padding: 9px 12px; }
       <button class="btn btn-secondary btn-sm" onclick="closeDetailModal()">✕ Close</button>
     </div>
     <div id="detail-body"></div>
+  </div>
+</div>
+
+<!-- SAVING OVERLAY -->
+<div id="saving-overlay" class="saving-overlay">
+  <div class="saving-spinner"></div>
+  <div class="saving-text" id="saving-text">Saving record…</div>
+  <div class="saving-bar-wrap">
+    <div class="saving-bar" id="saving-bar"></div>
   </div>
 </div>
 
@@ -847,24 +896,60 @@ function startScreening() {
 
 function resetForm() {
   if (!confirm('Discard this screening session?')) return;
+  _doReset();
+}
+
+function _doReset() {
   document.getElementById('step-setup').style.display = '';
   document.getElementById('step-screening').style.display = 'none';
   document.getElementById('sticky-scores').style.display = 'none';
+  document.getElementById('student-name').value = '';
+  document.getElementById('student-class').value = '';
   state = {};
+  window.scrollTo(0,0);
 }
 
 // ══════════════════════════════════════════════
 //  SAVE TO FIREBASE
 // ══════════════════════════════════════════════
+function showSavingOverlay() {
+  const overlay = document.getElementById('saving-overlay');
+  const bar     = document.getElementById('saving-bar');
+  const text    = document.getElementById('saving-text');
+  overlay.classList.add('open');
+  bar.style.width = '0%';
+  text.textContent = 'Saving record…';
+  // animate bar
+  let pct = 0;
+  const interval = setInterval(() => {
+    pct += Math.random() * 18;
+    if (pct > 85) pct = 85; // hold at 85% until actually done
+    bar.style.width = pct + '%';
+  }, 300);
+  return interval;
+}
+
+function hideSavingOverlay(interval, success) {
+  clearInterval(interval);
+  const bar  = document.getElementById('saving-bar');
+  const text = document.getElementById('saving-text');
+  bar.style.width = '100%';
+  text.textContent = success ? '✅ Saved!' : '❌ Save failed';
+  setTimeout(() => {
+    document.getElementById('saving-overlay').classList.remove('open');
+    document.getElementById('saving-bar').style.width = '0%';
+  }, 1200);
+}
+
 async function saveRecord() {
   if (!window._fbReady) { toast('Firebase not connected — check config'); return; }
 
   const btn = document.getElementById('save-btn');
-  btn.disabled = true; btn.textContent = 'Saving…';
+  btn.disabled = true;
 
+  const interval = showSavingOverlay();
   const { words, pgcs } = calcScores();
 
-  // build item details
   const wordDetails = {};
   ALL_WORD_KEYS.forEach(k => {
     wordDetails[k] = { status: state[k]?.status || null, comment: state[k]?.comment || '' };
@@ -874,7 +959,6 @@ async function saveRecord() {
     pgcDetails[k] = { status: state[k]?.status || null, comment: state[k]?.comment || '' };
   });
 
-  // per-unit word breakdowns
   const unitWordScores = {};
   WORD_SECTIONS.forEach(sec => {
     let correct = 0, total = 0;
@@ -900,15 +984,14 @@ async function saveRecord() {
 
   try {
     await window._addDoc(window._collection(window._db, 'screenings'), record);
-    toast('✅ Record saved!');
-    resetForm();
-    document.getElementById('student-name').value = '';
-    document.getElementById('student-class').value = '';
+    hideSavingOverlay(interval, true);
+    setTimeout(() => { _doReset(); }, 1400);
   } catch(e) {
     console.error(e);
+    hideSavingOverlay(interval, false);
     toast('❌ Save failed — check Firebase config');
   } finally {
-    btn.disabled = false; btn.textContent = '💾 Save Record';
+    btn.disabled = false;
   }
 }
 
